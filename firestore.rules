@@ -1,0 +1,49 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // Membership must be created/managed by a trusted backend or platform admin.
+    function isCompanyMember(companyId) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/company_members/$(request.auth.uid + '_' + companyId))
+        && get(/databases/$(database)/documents/company_members/$(request.auth.uid + '_' + companyId)).data.status == 'active';
+    }
+
+    match /companies/{companyId} {
+      allow read: if isCompanyMember(companyId);
+      allow create, update, delete: if false;
+    }
+
+    match /company_members/{membershipId} {
+      allow read: if signedIn() && resource.data.uid == request.auth.uid;
+      allow write: if false;
+    }
+
+    match /companies/{companyId}/products/{productId} {
+      allow read: if isCompanyMember(companyId);
+      allow write: if false;
+    }
+
+    match /companies/{companyId}/stock_movements/{movementId} {
+      allow read: if isCompanyMember(companyId);
+      allow write: if false;
+    }
+
+    match /companies/{companyId}/sales/{saleId} {
+      allow read: if isCompanyMember(companyId);
+      allow write: if false;
+    }
+
+    match /companies/{companyId}/suppliers/{supplierId} {
+      allow read: if isCompanyMember(companyId);
+      allow write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
