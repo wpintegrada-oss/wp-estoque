@@ -1,9 +1,10 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import {
   BarChart3, Boxes, Building2, ClipboardList, LayoutDashboard,
-  Package, Settings, ShoppingCart, Truck, Warehouse, Menu, Bell
+  Package, Settings, ShoppingCart, Truck, Warehouse, Menu, Bell, LogOut
 } from 'lucide-react'
 import { useState } from 'react'
+import { useAuth } from '../../context/AuthContext'
 
 const navigation = [
   { label: 'Visão geral', to: '/', icon: LayoutDashboard, end: true },
@@ -18,6 +19,7 @@ const navigation = [
 
 export function AppLayout() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const { companyName, user, signOutUser } = useAuth()
 
   return (
     <div className="app-shell">
@@ -38,7 +40,8 @@ export function AppLayout() {
           <NavLink to="/configuracoes" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
             <Settings size={18} /><span>Configurações</span>
           </NavLink>
-          <div className="sidebar-company"><div className="company-avatar">E</div><div><strong>Minha empresa</strong><span>Plano demonstração</span></div></div>
+          <div className="sidebar-company"><div className="company-avatar">{(companyName || 'E').charAt(0).toUpperCase()}</div><div><strong>{companyName || 'Minha empresa'}</strong><span>Conta conectada</span></div></div>
+          <button className="nav-link logout-link" onClick={() => void signOutUser()}><LogOut size={18}/><span>Sair da conta</span></button>
           <small>WP Integrada · WP Estoque</small>
         </div>
       </aside>
@@ -49,7 +52,7 @@ export function AppLayout() {
           <div className="breadcrumb">WP ESTOQUE <span>/</span> <strong>Painel</strong></div>
           <div className="topbar-actions">
             <button className="icon-button" aria-label="Notificações"><Bell size={19} /></button>
-            <div className="user-avatar">WP</div>
+            <div className="user-avatar" title={user?.email || 'Usuário'}>WP</div>
           </div>
         </header>
         <div className="page-content"><Outlet /></div>
