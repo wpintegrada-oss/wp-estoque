@@ -2,13 +2,14 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppLayout } from './components/layout/AppLayout'
 import { DashboardPage } from './pages/DashboardPage'
 import { PlaceholderPage } from './pages/PlaceholderPage'
+import { ProductsPage } from './pages/ProductsPage'
 
 export default function App() {
   return (
     <Routes>
       <Route element={<AppLayout />}>
         <Route index element={<DashboardPage />} />
-        <Route path="produtos" element={<PlaceholderPage title="Produtos" description="Cadastre produtos, categorias, códigos, preços e estoque mínimo." />} />
+        <Route path="produtos" element={<ProductsPage />} />
         <Route path="vendas" element={<PlaceholderPage title="Vendas / PDV" description="Registre vendas e acompanhe a baixa automática do estoque." />} />
         <Route path="compras" element={<PlaceholderPage title="Compras" description="Registre compras, recebimentos e entradas de mercadorias." />} />
         <Route path="fornecedores" element={<PlaceholderPage title="Fornecedores" description="Organize os dados e o histórico dos seus fornecedores." />} />

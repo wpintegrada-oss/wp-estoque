@@ -40,3 +40,9 @@ Não libere gravações gerais no Firestore para fazer a interface "funcionar". 
 4. Implementar movimentações atômicas.
 5. Implementar PDV com baixa de estoque e cancelamento/estorno auditável.
 6. Criar testes de regras e funções.
+
+## Etapa atual — módulo Produtos
+
+O módulo Produtos inclui cadastro, edição, exclusão, pesquisa, filtros por categoria/nível de estoque e indicadores de quantidade/valor em estoque. Nesta etapa, os registros são persistidos no `localStorage` do navegador para permitir testes de interface sem depender de credenciais Firebase.
+
+**Importante:** os dados locais não são sincronizados entre navegadores, computadores ou usuários e não devem ser usados como banco de dados de produção. A próxima etapa técnica é implementar autenticação, provisionamento de empresa e persistência multiempresa no Firestore, com operações de estoque feitas por backend confiável. As regras atuais do Firestore continuam bloqueando gravações diretas do cliente.
