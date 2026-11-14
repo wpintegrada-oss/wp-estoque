@@ -1,10 +1,9 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut, type User } from 'firebase/auth'
-import { doc, getDoc, serverTimestamp, writeBatch } from 'firebase/firestore'
+import { doc, getDoc } from 'firebase/firestore'
 import { auth, db, firebaseConfigured } from '../services/firebase'
 
 const DEMO_COMPANY_ID = 'restaurante-frango-churrasco'
-const DEMO_COMPANY_NAME = 'Restaurante Frango e Churrasco'
 
 type AuthContextValue = {
   user: User | null
@@ -18,41 +17,10 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-async function ensureDemoMembership(user: User) {
-  if (!db) throw new Error('Firebase não está configurado. Confira as variáveis VITE_FIREBASE_* na Vercel.')
-  const companyRef = doc(db, 'companies', DEMO_COMPANY_ID)
-  const membershipRef = doc(db, 'company_members', `${user.uid}_${DEMO_COMPANY_ID}`)
-  const membership = await getDoc(membershipRef)
-
-  if (membership.exists() && membership.data().status === 'active') return
-  if (membership.exists()) throw new Error('O acesso desta conta à empresa está inativo.')
-
-  const company = await getDoc(companyRef)
-  if (company.exists()) {
-    throw new Error('A empresa de demonstração já foi provisionada por outra conta. Solicite ao administrador a liberação do seu usuário.')
-  }
-
-  const batch = writeBatch(db)
-  batch.set(companyRef, {
-    name: DEMO_COMPANY_NAME,
-    ownerUid: user.uid,
-    status: 'active',
-    plan: 'demo',
-    createdAt: serverTimestamp(),
-  })
-  batch.set(membershipRef, {
-    uid: user.uid,
-    companyId: DEMO_COMPANY_ID,
-    role: 'company_admin',
-    status: 'active',
-    createdAt: serverTimestamp(),
-  })
-  await batch.commit()
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [companyId, setCompanyId] = useState<string | null>(null)
+  const [companyName, setCompanyName] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -66,17 +34,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser)
       setCompanyId(null)
+      setCompanyName('')
       setError('')
       if (!currentUser) {
         setLoading(false)
         return
       }
+
       setLoading(true)
       try {
-        await ensureDemoMembership(currentUser)
+        const membershipRef = doc(db, 'company_members', `${currentUser.uid}_${DEMO_COMPANY_ID}`)
+        const membershipSnap = await getDoc(membershipRef)
+        if (!membershipSnap.exists() || membershipSnap.data().status !== 'active' || membershipSnap.data().uid !== currentUser.uid) {
+          throw new Error('Sua conta ainda não está vinculada à empresa. O administrador precisa concluir a configuração inicial no Firestore.')
+        }
+
+        const companyRef = doc(db, 'companies', DEMO_COMPANY_ID)
+        const companySnap = await getDoc(companyRef)
+        if (!companySnap.exists() || companySnap.data().status !== 'active') {
+          throw new Error('A empresa não foi configurada ou está inativa. Verifique o cadastro no Firestore.')
+        }
+
         setCompanyId(DEMO_COMPANY_ID)
+        setCompanyName(String(companySnap.data().name || 'Minha empresa'))
       } catch (cause) {
-        setError(cause instanceof Error ? cause.message : 'Não foi possível carregar a empresa.')
+        setError(cause instanceof Error ? cause.message : 'Não foi possível carregar os dados da empresa.')
       } finally {
         setLoading(false)
       }
@@ -85,19 +67,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const value = useMemo<AuthContextValue>(() => ({
-    user,
-    companyId,
-    companyName: DEMO_COMPANY_NAME,
-    loading,
-    error,
+    user, companyId, companyName, loading, error,
     signIn: async (email, password) => {
       if (!auth) throw new Error('Firebase Authentication não está disponível.')
       await signInWithEmailAndPassword(auth, email.trim(), password)
     },
-    signOutUser: async () => {
-      if (auth) await signOut(auth)
-    },
-  }), [user, companyId, loading, error])
+    signOutUser: async () => { if (auth) await signOut(auth) },
+  }), [user, companyId, companyName, loading, error])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
