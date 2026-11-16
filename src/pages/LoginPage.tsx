@@ -21,8 +21,14 @@ export function LoginPage() {
         setError('E-mail ou senha incorretos.')
       } else if (code.includes('too-many-requests')) {
         setError('Muitas tentativas. Aguarde alguns minutos e tente novamente.')
+      } else if (code.includes('unauthorized-domain')) {
+        setError('Este endereço de Preview não está autorizado no Firebase Authentication. É necessário adicionar o domínio do Preview aos domínios autorizados do Firebase.')
+      } else if (code.includes('operation-not-allowed')) {
+        setError('O método E-mail/senha não está habilitado no Firebase Authentication.')
+      } else if (code.includes('network-request-failed')) {
+        setError('Falha de conexão com o Firebase. Verifique a internet e tente novamente.')
       } else {
-        setError('Não foi possível entrar. Confira os dados e tente novamente.')
+        setError(code ? `Falha no login (\${code}). Confira a configuração do Firebase Authentication.` : 'Não foi possível entrar. Confira os dados e tente novamente.')
       }
     } finally {
       setSubmitting(false)
