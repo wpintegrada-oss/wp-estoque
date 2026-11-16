@@ -41,7 +41,7 @@ export function AppLayout() {
             <Settings size={18} /><span>Configurações</span>
           </NavLink>
           <div className="sidebar-company"><div className="company-avatar">{(companyName || 'E').charAt(0).toUpperCase()}</div><div><strong>{companyName || 'Minha empresa'}</strong><span>Conta conectada</span></div></div>
-          <button className="nav-link logout-link" onClick={() => void signOutUser()}><LogOut size={18}/><span>Sair da conta</span></button>
+          <button type="button" className="nav-link logout-link" onClick={() => void signOutUser()} aria-label="Sair da conta"><LogOut size={18}/><span>Sair da conta</span></button>
           <small>WP Integrada · WP Estoque</small>
         </div>
       </aside>
