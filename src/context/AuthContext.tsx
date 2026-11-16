@@ -31,7 +31,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+    // Capture the initialized instances after the null guard so TypeScript
+    // keeps their non-null types inside the asynchronous auth callback.
+    const firebaseAuth = auth
+    const firestore = db
+
+    const unsubscribe = onAuthStateChanged(firebaseAuth, async (currentUser) => {
       setUser(currentUser)
       setCompanyId(null)
       setCompanyName('')
@@ -43,13 +48,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       setLoading(true)
       try {
-        const membershipRef = doc(db, 'company_members', `${currentUser.uid}_${DEMO_COMPANY_ID}`)
+        const membershipRef = doc(firestore, 'company_members', `${currentUser.uid}_${DEMO_COMPANY_ID}`)
         const membershipSnap = await getDoc(membershipRef)
         if (!membershipSnap.exists() || membershipSnap.data().status !== 'active' || membershipSnap.data().uid !== currentUser.uid) {
           throw new Error('Sua conta ainda não está vinculada à empresa. O administrador precisa concluir a configuração inicial no Firestore.')
         }
 
-        const companyRef = doc(db, 'companies', DEMO_COMPANY_ID)
+        const companyRef = doc(firestore, 'companies', DEMO_COMPANY_ID)
         const companySnap = await getDoc(companyRef)
         if (!companySnap.exists() || companySnap.data().status !== 'active') {
           throw new Error('A empresa não foi configurada ou está inativa. Verifique o cadastro no Firestore.')
