@@ -29,7 +29,7 @@ export function LoginPage() {
       } else if (code.includes('network-request-failed')) {
         setError('Falha de conexão com o Firebase. Verifique a internet e tente novamente.')
       } else {
-        setError(code ? `Falha no login (\${code}). Confira a configuração do Firebase Authentication.` : 'Não foi possível entrar. Confira os dados e tente novamente.')
+        setError(code ? `Falha no login (${code}): ${detail}` : (detail || 'Não foi possível entrar. Confira os dados e tente novamente.'))
       }
     } finally {
       setSubmitting(false)
