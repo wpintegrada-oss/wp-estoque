@@ -53,6 +53,9 @@ export function AppLayout() {
           <div className="topbar-actions">
             <button className="icon-button" aria-label="Notificações"><Bell size={19} /></button>
             <div className="user-avatar" title={user?.email || 'Usuário'}>WP</div>
+            <button type="button" className="logout-topbar" onClick={() => void signOutUser()}>
+              <LogOut size={17} /><span>Sair</span>
+            </button>
           </div>
         </header>
         <div className="page-content"><Outlet /></div>
