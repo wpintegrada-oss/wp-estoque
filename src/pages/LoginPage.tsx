@@ -17,6 +17,7 @@ export function LoginPage() {
       await signIn(email, password)
     } catch (cause) {
       const code = cause && typeof cause === 'object' && 'code' in cause ? String(cause.code) : ''
+      const detail = cause instanceof Error ? cause.message : String(cause ?? '')
       if (code.includes('invalid-credential') || code.includes('wrong-password') || code.includes('user-not-found')) {
         setError('E-mail ou senha incorretos.')
       } else if (code.includes('too-many-requests')) {
